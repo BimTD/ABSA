@@ -12,6 +12,8 @@ def absa(text, ner_text, sa_text):
 
     ner, _ = ner_model.predict([ner_text])
 
+
+
     pred = {}
     span = []
     for i in ner[0]:

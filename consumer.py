@@ -1,114 +1,149 @@
-import findspark
-findspark.init()
+# # from confluent_kafka import Consumer, KafkaException
+# # import json
 
-import pyspark
-from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-from pyspark.sql.functions import col, from_json
-import requests
+# # # Cấu hình Kafka Consumer
+# # conf = {
+# #     'bootstrap.servers': 'localhost:9092',  # Địa chỉ Kafka broker
+# #     # 'bootstrap.servers': '127.0.0.1:9092',
+# #     'group.id': 'shopee-consumer-group',  # Nhóm consumer
+# #     'auto.offset.reset': 'earliest'  # Đọc từ đầu nếu chưa có offset
+# # }
 
-scala_version = '2.12'  # your scala version
-spark_version = '3.2.3' # your spark version
-kafka_version = '2.5.0' # your kafka version
-spark_nlp_version = '5.2.3'
+# # consumer = Consumer(conf)
 
-packages = [
-    f'org.apache.spark:spark-sql-kafka-0-10_{scala_version}:{spark_version}',
-    f'org.apache.kafka:kafka-clients:{kafka_version}',
-    f'com.johnsnowlabs.nlp:spark-nlp_2.12:{spark_nlp_version}'
-]
+# # # Tên topic cần lắng nghe
+# # topic_name = 'ryhjlimi-shopee-2'
+# # consumer.subscribe([topic_name])
 
-spark = SparkSession.builder \
-                    .appName("kafka-shopee")\
-                    .master("local[4]")\
-                    .config("spark.python.worker.reuse",True) \
-                    .config("spark.executor.memory", "16g") \
-                    .config("spark.driver.memory", "16g") \
-                    .config("spark.driver.maxResultSize", "0") \
-                    .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
-                    .config("spark.kryoserializer.buffer.max", "2000M") \
-                    .config("spark.sql.adaptive.enabled", False) \
-                    .config("spark.sql.execution.arrow.maxRecordsPerBatch", "16") \
-                    .config("spark.sql.streaming.forceDeleteTempCheckpointLocation", True) \
-                    .config("spark.jars.packages", ",".join(packages))\
-                    .config("spark.executor.heartbeatInterval", "3600s") \
-                    .config("spark.network.timeout", "4000s") \
-                    .getOrCreate()
+# # print(f'Listening for messages on topic: {topic_name}')
 
-spark.sparkContext.setLogLevel("error")
+# # try:
+# #     while True:
+# #         msg = consumer.poll(timeout=1.0)  # Lắng nghe tin nhắn từ Kafka
+# #         if msg is None:
+# #             continue
+# #         if msg.error():
+# #             if msg.error().code() == KafkaException._PARTITION_EOF:
+# #                 continue
+# #             else:
+# #                 print(f'Error: {msg.error()}')
+# #                 break
 
-print(packages)
+# #         # Giải mã dữ liệu JSON
+# #         try:
+# #             data = json.loads(msg.value().decode('utf-8'))
+# #             print("Received Message:")
+# #             print(f"CMT_ID: {data.get('cmtid', 'N/A')}")
+# #             print(f"Rating Star: {data.get('rating_star', 'N/A')}")
+# #             print(f"Comment: {data.get('comment', 'N/A')}")
+# #             print("-" * 30)
+# #         except json.JSONDecodeError as e:
+# #             print(f"JSON Decode Error: {e}")
+# # except KeyboardInterrupt:
+# #     print("Stopping consumer...")
+# # finally:
+# #     consumer.close()  # Đóng consumer khi thoát
 
-from preprocess import udf_clean
-from pipeline import pipeline
+# from confluent_kafka import Consumer, KafkaError
+# import json
 
-topic_name = 'ryhjlimi-shopee'
-kafka_server = 'dory-01.srvs.cloudkafka.com:9094'
+# # Cấu hình Kafka Consumer
+# conf = {
+#     'bootstrap.servers': '127.0.0.1:9092',  # Địa chỉ Kafka broker
+#     'group.id': 'shopee-consumer-group',    # Nhóm consumer
+#     'auto.offset.reset': 'earliest'         # Đọc từ đầu nếu chưa có offset
+# }
 
-streamRawDf = spark\
-                .readStream\
-                .format("kafka")\
-                .option("kafka.bootstrap.servers", kafka_server)\
-                .option("subscribe", topic_name)\
-                .option("startingOffsets", "latest")\
-                .option("kafka.security.protocol", "SASL_SSL")\
-                .option("kafka.sasl.mechanism", "SCRAM-SHA-256")\
-                .option("kafka.sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"ryhjlimi\" password=\"LuUoqLhDxrLrFDGjJPDxoaW1i4lnKaOl\";")\
-                .option("failOnDataLoss", "false") \
-                .option("groupIdPrefix", "ryhjlimi-") \
-                .option('spark.default.parallelism', 1) \
-                .option('spark.sql.shuffle.partitions', 1) \
-                .load()
+# # Khởi tạo Kafka Consumer
+# consumer = Consumer(conf)
 
-# Define the JSON schema
-json_schema = StructType([
-    StructField("cmtid", StringType(), True),
-    StructField("comment", StringType(), True),
-    StructField("rating_star", IntegerType(), True),
-])
+# # Tên topic cần lắng nghe
+# topic_name = 'ryhjlimi-shopee-2'
+# consumer.subscribe([topic_name])
 
-streamDF = streamRawDf \
-    .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)") \
-    .select(from_json("value", json_schema).alias("data")) \
-    .select("data.*")
+# print(f'Listening for messages on topic: {topic_name}')
 
-cleanDF = streamDF\
-    .withColumn("text", udf_clean(col('comment')))\
+# try:
+#     while True:
+#         msg = consumer.poll(timeout=1.0)  # Lắng nghe tin nhắn từ Kafka
+        
+#         if msg is None:
+#             continue
 
-resultDF = pipeline.fit(cleanDF).transform(cleanDF)
+#         if msg.error():
+#             if msg.error().code() == KafkaError._PARTITION_EOF:
+#                 print("Reached end of partition, waiting for new messages...")
+#                 continue
+#             else:
+#                 print(f'Kafka Error: {msg.error()}')
+#                 break
 
-# Define a function to send individual records to the localhost server
-def send_record_to_server(record):
-    url = "http://127.0.0.1:5000/"
+#         # Giải mã dữ liệu JSON
+#         try:
+#             data = json.loads(msg.value().decode('utf-8'))
+#             print("Received Message:")
+#             print(f"CMT_ID: {data.get('cmtid', 'N/A')}")
+#             print(f"Rating Star: {data.get('rating_star', 'N/A')}")
+#             print(f"Comment: {data.get('comment', 'N/A')}")
+#             print("-" * 30)
+#         except json.JSONDecodeError as e:
+#             print(f"JSON Decode Error: {e}")
+#             print(f"Raw Message: {msg.value().decode('utf-8')}")  # In nội dung lỗi để debug
 
-    try:
-        response = requests.post(url, json=record.asDict())
-    except:
-        pass
+# except KeyboardInterrupt:
+#     print("Stopping consumer...")
 
-from dotenv import load_dotenv
-load_dotenv()
+# finally:
+#     print("Closing consumer...")
+#     consumer.close()  # Đóng consumer khi thoát
 
-import os
-output_path = os.getenv('ROOT_PATH') + "/database/"
-if (not os.path.exists(output_path)):
-    os.mkdir(output_path)
+from confluent_kafka import Consumer, KafkaError
+import json
 
-checkpoint_location = os.getenv('ROOT_PATH') + "/database/checkpoint/"
+# Cấu hình Kafka Consumer
+conf = {
+    'bootstrap.servers': '127.0.0.1:9092',  # Địa chỉ Kafka broker
+    'group.id': 'shopee-consumer-group',    # Nhóm consumer
+    'auto.offset.reset': 'earliest'         # Đọc từ đầu nếu chưa có offset
+}
 
-stream_writer = (
-    resultDF
-    .writeStream 
-    .queryName("predictComments") 
-    .outputMode("append")
-    .format("csv")
-    .option("path", output_path) 
-    .option("checkpointLocation", checkpoint_location) 
-    .option("truncate", False)
-    .option("header", True)
-    .foreach(send_record_to_server)
-    .trigger(processingTime="10 seconds") 
-)
+# Khởi tạo Kafka Consumer
+consumer = Consumer(conf)
+topic_name = 'ryhjlimi-shopee-2'
+consumer.subscribe([topic_name])
 
-query = stream_writer.start()
-query.awaitTermination()
+print(f'Listening for messages on topic: {topic_name}')
+
+try:
+    while True:
+        msg = consumer.poll(timeout=1.0)  # Lắng nghe tin nhắn từ Kafka
+        
+        if msg is None:
+            continue
+
+        if msg.error():
+            if msg.error().code() == KafkaError._PARTITION_EOF:
+                print("Reached end of partition, waiting for new messages...")
+                continue
+            else:
+                print(f'Kafka Error: {msg.error()}')
+                break
+
+        try:
+            # Giải mã dữ liệu JSON
+            data = json.loads(msg.value().decode('utf-8'))
+            print("Received Message:")
+            print(f"CMT_ID: {data.get('cmtid', 'N/A')}")
+            print(f"Rating Star: {data.get('rating_star', 'N/A')}")
+            print(f"Comment: {data.get('comment', 'N/A')}")
+            print("-" * 30)
+        except json.JSONDecodeError as e:
+            print(f"JSON Decode Error: {e}")
+            print(f"Raw Message: {msg.value().decode('utf-8')}")  # Hiển thị nội dung lỗi để debug
+
+except KeyboardInterrupt:
+    print("Stopping consumer...")
+
+finally:
+    print("Closing consumer...")
+    consumer.close()  # Đóng consumer khi thoát

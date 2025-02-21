@@ -6,19 +6,26 @@ import json
 from confluent_kafka import Producer
 import os
 
-topic_name = 'ryhjlimi-shopee'
-kafka_server = 'dory-01.srvs.cloudkafka.com:9094,dory-02.srvs.cloudkafka.com:9094,dory-03.srvs.cloudkafka.com:9094'
+topic_name = 'ryhjlimi-shopee-2'
+# kafka_server = 'dory-01.srvs.cloudkafka.com:9094,dory-02.srvs.cloudkafka.com:9094,dory-03.srvs.cloudkafka.com:9094'
+kafka_server = 'localhost:9092'
 cert_folder = 'cert/'
 
+# conf = {
+#         'bootstrap.servers': kafka_server.split(",")[0],
+#         'session.timeout.ms': 6000,
+#         'default.topic.config': {'auto.offset.reset': 'smallest'},
+#         'security.protocol': 'SASL_SSL',
+#         'sasl.mechanisms': 'SCRAM-SHA-256',
+#         'sasl.username': 'ryhjlimi',
+#         'sasl.password': 'LuUoqLhDxrLrFDGjJPDxoaW1i4lnKaOl'
+#     }
+
 conf = {
-        'bootstrap.servers': kafka_server.split(",")[0],
-        'session.timeout.ms': 6000,
-        'default.topic.config': {'auto.offset.reset': 'smallest'},
-        'security.protocol': 'SASL_SSL',
-        'sasl.mechanisms': 'SCRAM-SHA-256',
-        'sasl.username': 'ryhjlimi',
-        'sasl.password': 'LuUoqLhDxrLrFDGjJPDxoaW1i4lnKaOl'
-    }
+    'bootstrap.servers': 'localhost:9092',  # Địa chỉ của broker Kafka trên local
+    'session.timeout.ms': 6000,
+    'default.topic.config': {'auto.offset.reset': 'smallest'}
+}
 
 p = Producer(**conf)
 
