@@ -21,10 +21,12 @@ def home():
     
     if request.method == 'POST':
         req = request.json
+        print("Received request:", req)  # Thêm dòng này để kiểm tra
+
         
         if req['cmtid'] not in data:
             data[req['cmtid']] = {
-                "text": req['text'],
+                # "text": req['text'],
                 "labels": [],
                 'sentiment': req['sentiment'],
                 'num': copy.deepcopy(num_cmt)

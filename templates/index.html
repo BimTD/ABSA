@@ -2,34 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Model Prediction Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+    <title>Kafka Consumer Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script>
+        async function fetchData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+            const tableBody = document.getElementById('data-table-body');
+            tableBody.innerHTML = ''; // Xóa nội dung cũ
+
+            Object.entries(data).forEach(([cmtid, info]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cmtid}</td>
+                    <td>${info.rating_star}</td>
+                    <td>${info.comment}</td>
+                    <td>${info.sentiment}</td>
+                    <td>${JSON.stringify(info.labels)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        setInterval(fetchData, 3000); // Cập nhật dữ liệu mỗi 3 giây
+        window.onload = fetchData; // Load dữ liệu khi mở trang
+    </script>
 </head>
 <body>
-    <header>
-        Real-time Model Prediction Dashboard
-    </header>
-
-    <!-- <button id="runModelBtn">Run model</button> -->
-    <div id="dashboard">
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Comments</th>
-                    <th>Labels</th>
-                    <th>Sensitive</th>
-                    <th>Overall</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dữ liệu sẽ được cập nhật tại đây -->
-            </tbody>
-        </table>
-    </div>
-
-    <script src="{{ url_for('static',filename='script.js') }}"></script>
+    <h1>Kafka Consumer Data</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>CMT_ID</th>
+                <th>Rating Star</th>
+                <th>Comment</th>
+                <th>Sentiment</th>
+                <th>Labels</th>
+            </tr>
+        </thead>
+        <tbody id="data-table-body"></tbody>
+    </table>
 </body>
 </html>
