@@ -39,7 +39,7 @@ function populateTable(tableBody, results) {
 
         cell1.textContent = i + 1;
 
-        // Tạo các phần văn bản với màu sắc tương ứng
+     
         var coloredText = getColoredText(text, labels);
         cell2.innerHTML = coloredText;
 
@@ -51,7 +51,7 @@ function populateTable(tableBody, results) {
 
         }
         
-        // Tạo các hàng nhỏ trong cột Labels
+
         for (var j = 0; j < labels.length; j++) {
             var labelValue = labels[j][2];
             var labelColor = getLabelColor(labelValue);
@@ -70,30 +70,30 @@ function populateTable(tableBody, results) {
 }
 
 function getColoredText(text, labels) {
-    // Sắp xếp các nhãn theo vị trí để áp dụng màu sắc cho văn bản
+    
     labels.sort((a, b) => a[0] - b[0]);
 
     var coloredText = "";
     var lastIndex = 0;
 
-    // Tạo các phần văn bản với màu sắc tương ứng
+
     for (var i = 0; i < labels.length; i++) {
         var labelStart = labels[i][0];
         var labelEnd = labels[i][1];
         var labelValue = labels[i][2];
         var labelColor = getTextColor(labelValue);
 
-        // Thêm văn bản trước nhãn
+     
         coloredText += text.substring(lastIndex, labelStart);
 
-        // Thêm nhãn với màu sắc
+       
         coloredText += `<sub style="font-size: 0.7em; position: relative;top: -0.8em; color:${labelColor};">#${labelValue.split("#")[0]}</sub>
         <span style="color:${labelColor}">${text.substring(labelStart, labelEnd)}</span>`;
 
         lastIndex = labelEnd;
     }
 
-    // Thêm phần còn lại của văn bản
+
     coloredText += text.substring(lastIndex);
 
     return coloredText;

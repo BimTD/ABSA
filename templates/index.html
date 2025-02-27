@@ -3,60 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kafka Consumer Data</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+    <title>Real-time Model Prediction Dashboard</title>
+    
     <script>
         async function fetchData() {
-            const response = await fetch('/data');
-            const data = await response.json();
-            const tableBody = document.getElementById('data-table-body');
-            tableBody.innerHTML = ''; // Xóa nội dung cũ
+    const response = await fetch('/data');
+    const data = await response.json();
+    const tableBody = document.getElementById('data-table-body');
+    tableBody.innerHTML = ''; 
 
-            Object.entries(data).forEach(([cmtid, info]) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${cmtid}</td>
-                    <td>${info.rating_star}</td>
-                    <td>${info.comment}</td>
-                    <td>${info.sentiment}</td>
-                    <td>${JSON.stringify(info.labels)}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
+    let index = 1; 
+    Object.values(data).forEach(info => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index}</td>
+            <td>${info.rating_star}</td>
+            <td>${info.comment}</td>
+            <td>${info.sentiment}</td>
+        `;
+        tableBody.appendChild(row);
+        index++; 
+    });
+    }
 
-        setInterval(fetchData, 3000); // Cập nhật dữ liệu mỗi 3 giây
-        window.onload = fetchData; // Load dữ liệu khi mở trang
+
+        setInterval(fetchData, 3000); 
+        window.onload = fetchData; 
     </script>
 </head>
 <body>
-    <h1>Kafka Consumer Data</h1>
+    <h1>Real-time Model Prediction Dashboard</h1>
     <table>
         <thead>
             <tr>
-                <th>CMT_ID</th>
+                <th>STT</th>
                 <th>Rating Star</th>
                 <th>Comment</th>
                 <th>Sentiment</th>
-                <th>Labels</th>
             </tr>
         </thead>
         <tbody id="data-table-body"></tbody>

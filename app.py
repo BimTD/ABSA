@@ -21,7 +21,7 @@ def home():
     
     if request.method == 'POST':
         req = request.json
-        print("Received request:", req)  # Thêm dòng này để kiểm tra
+        print("Received request:", req) 
 
         
         if req['cmtid'] not in data:
